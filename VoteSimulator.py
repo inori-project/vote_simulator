@@ -114,6 +114,8 @@ class VoteSimulator(object):
     def run(self, votes):
         _buf = []
         for o in votes:
+            if len(o) == 0:
+              continue
             for v in o['votes']:
                 if v['type'] in [VoteType.Quinella, VoteType.Wide, VoteType.Trio]:
                     v['comb'] = sorted(v['comb'])
