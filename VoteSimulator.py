@@ -4,36 +4,17 @@ import sqlalchemy
 
 import numpy as np
 import tempfile
-from enum import IntEnum
-
-
-class VoteType(IntEnum):
-    # 単勝
-    Win = 1
-    # 複勝
-    Place = 2
-    # 馬連
-    Quinella = 3
-    # 馬単
-    Exacta = 4
-    # ワイド
-    Wide = 5
-    # 3連複
-    Trio = 6
-    # 3連単
-    Trifecta = 7
-    # undefined
-    Undefined = 9
+from VoteType import VoteType
 
 
 class VoteSimulator(object):
 
-    def __init__(self, db=os.environ.get("DB_STRING"), src='jrdb', nocache=False):
+    def __init__(self, db=os.environ.get("DB_STRING"), src='jrdb', nocache=False, path=''):
         self.inited = False
         self.db = sqlalchemy.create_engine(db)
 
         self.temp_load_df = os.path.join(tempfile.gettempdir(), ".votesimulator")
-        self.df = self.load(src, nocache)
+        self.df = self.load(src, nocache, path)
 
     def load_from_jrdb(self):
         hjc_df = pd.read_sql(f"SELECT * FROM d_jrdb_HJC",
@@ -91,7 +72,7 @@ class VoteSimulator(object):
         a = a.set_index(['race_key', 'vote_type', 'joined_horse_no']).sort_index()
         return a
 
-    def load(self, src='jrdb', nocache=False):
+    def load(self, src='jrdb', nocache=False, path=''):
         # load済みのキャッシュがある場合はそれを使用する
         if not nocache and os.path.exists(self.temp_load_df):
             print('load from cache..', self.temp_load_df)
@@ -105,6 +86,9 @@ class VoteSimulator(object):
                 print('load from jvlink data..')
                 # TODO: jvlink
                 df = pd.DataFrame()
+            elif src == 'local':
+                df = pd.read_pickle(path)
+
         self._save(df)
         return df
 
